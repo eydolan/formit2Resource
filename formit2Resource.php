@@ -1,4 +1,10 @@
 <?php
+/*
+quick hook for formit. save as a snippet and call in formit hook
+make sure you input field correspond to the TV and fieldnames in the resource
+there might be security issues here that still need to be sorted
+*/
+
 $doc = $modx->newObject('modResource');
 $doc->set('createdby', $modx->user->get('id'));
 
@@ -13,7 +19,7 @@ foreach ($allFormFields as $field => $value) {
 }
 
 // Set other resource properties
-$doc->set('parent', 290);
+$doc->set('parent', 31);
 $doc->set('alias', time());
 $doc->set('template', '5'); 
 $doc->set('published', '1');
