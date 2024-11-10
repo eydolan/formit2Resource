@@ -48,7 +48,7 @@ $allFormFields = $hook->getValues();
 
 // Set core fields for the resource
 foreach ($allFormFields as $field => $value) {
-    if (in_array($field, ['pagetitle', 'content'])) {
+    if (in_array($field, ['pagetitle', 'content', 'introtext'])) {
         $doc->set($field, $value); // Set the page title and content
     }
 }
