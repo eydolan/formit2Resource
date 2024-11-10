@@ -9,11 +9,11 @@ $defaultTemplate=2;
 $defaultUser=732;
 
 // Load the Tagger service
-$tagger = $modx->getService('tagger'); // Simplified loading
+/*$tagger = $modx->getService('tagger'); // Simplified loading
 if (!$tagger) {
     $modx->log(modX::LOG_LEVEL_ERROR, 'Could not load Tagger service.');
     return false; // This may also be unnecessary if the service is guaranteed to be available
-}
+}*/
 
 // Create new resource
 $doc = $modx->newObject('modResource');
@@ -66,39 +66,53 @@ $tagFields = [
     'language_tags' => 'language_tagger_group_id',
 ];
 
-foreach ($tagFields as $tagField => $groupField) {
-    if (!empty($allFormFields[$tagField]) && !empty($allFormFields[$groupField])) {
-        $tags = explode(',', $allFormFields[$tagField]);
-        $taggerGroupId = (int) $allFormFields[$groupField];
+   foreach ($tagFields as $tagField => $groupField) {
+       
+       if (!empty($allFormFields[$tagField]) && !empty($allFormFields[$groupField])) {
+           
+           $tags = explode(',', $allFormFields[$tagField]);
+           $taggerGroupId = (int) $allFormFields[$groupField];
 
-        $modx->log(modX::LOG_LEVEL_ERROR, "Processing tags for $tagField in group $taggerGroupId");
+           $modx->log(modX::LOG_LEVEL_ERROR, "Processing tags for $tagField in group $taggerGroupId");
 
-        foreach ($tags as $tag) {
-            $tag = trim($tag);
-            if (!empty($tag)) {
-                $tagObject = $modx->getObject('TaggerTag', [
-                    'tag' => $tag,
-                    'group' => $taggerGroupId,
-                ]);
+           foreach ($tags as $tag) {
+               
+               $tag = trim($tag);
+               
+               if (!empty($tag)) {
+                   // Check if the tag already exists
+                   $tagObject = $modx->getObject('Tagger\Model\TaggerTag', [
+                       'tag' => $tag,
+                       'group' => $taggerGroupId,
+                   ]);
 
-                if (!$tagObject) {
-                    $tagObject = $modx->newObject('TaggerTag');
-                    $tagObject->set('tag', $tag);
-                    $tagObject->set('group', $taggerGroupId);
-                    if (!$tagObject->save()) {
-                        $modx->log(modX::LOG_LEVEL_ERROR, "Failed to create Tag: $tag in Group: $taggerGroupId");
-                    }
-                }
+                   // If the tag does not exist, create it
+                   if (!$tagObject) {
+                       $tagObject = $modx->newObject('Tagger\Model\TaggerTag');
+                       $tagObject->set('tag', $tag);
+                       $tagObject->set('group', $taggerGroupId);
+                       if (!$tagObject->save()) {
+                           $modx->log(modX::LOG_LEVEL_ERROR, "Failed to create Tag: $tag in Group: $taggerGroupId");
+                           continue; 
+                       }
+                   }
 
-                // Link the tag to the resource
-                if (!$tagObject->addMany($doc)) {
-                    $modx->log(modX::LOG_LEVEL_ERROR, "Failed to link Tag: $tag to Resource ID: $resourceId");
-                } else {
-                    $modx->log(modX::LOG_LEVEL_ERROR, "Linked Tag: $tag to Resource ID: $resourceId");
-                }
-            }
-        }
-    }
-}
+                   // Set the resource ID on the tag object
+                   $tagObject->set('resource', $resourceId);
 
+                   // Link the tag to the resource
+                   if (!$tagObject->addMany($doc)) {
+                       $modx->log(modX::LOG_LEVEL_ERROR, "Failed to link Tag: $tag to Resource ID: $resourceId");
+                   } else {
+                       $modx->log(modX::LOG_LEVEL_ERROR, "Linked Tag: $tag to Resource ID: $resourceId");
+                   }
+                   
+               }
+               
+           }
+           
+       }
+       
+   }
+   
 return true;
